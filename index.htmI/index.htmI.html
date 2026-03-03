@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>工价计算器 · 专业版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: #f2f4f8;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #f0f0f0;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2d3d;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #2d7aff;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .field-group {
+            flex: 1 1 calc(50% - 6px);
+        }
+        .field-label {
+            font-size: 14px;
+            color: #5e6f8d;
+            margin-bottom: 4px;
+            font-weight: 450;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e6eaf0;
+            border-radius: 16px;
+            font-size: 15px;
+            background: #ffffff;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        input:focus, select:focus {
+            border-color: #2d7aff;
+            outline: none;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .inline-unit {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .inline-unit input {
+            flex: 2;
+        }
+        .inline-unit select {
+            flex: 1;
+            min-width: 70px;
+        }
+        .tree-view {
+            border: 1.5px solid #e6eaf0;
+            border-radius: 20px;
+            padding: 12px;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #fafbfc;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+        .tree-item {
+            margin-left: 20px;
+            padding: 4px 0;
+        }
+        .tree-root {
+            font-weight: 500;
+            margin: 8px 0 4px;
+            color: #1f2d3d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        .tree-root span {
+            color: #7a8aa5;
+            font-size: 13px;
+            margin-left: 4px;
+            transition: transform 0.2s;
+        }
+        .tree-root.expanded span {
+            transform: rotate(90deg);
+        }
+        .tree-children {
+            margin-left: 20px;
+            border-left: 1px dashed #d0d8e6;
+            padding-left: 12px;
+            display: none;
+        }
+        .tree-children.expanded {
+            display: block;
+        }
+        .material-radio, .process-radio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .material-radio:last-child, .process-radio:last-child {
+            border-bottom: none;
+        }
+        .material-radio input, .process-radio input {
+            width: 18px;
+            height: 18px;
+            accent-color: #2d7aff;
+        }
+        .search-box {
+            background: #f2f4f8;
+            border-radius: 30px;
+            padding: 12px 18px;
+            border: none;
+            font-size: 15px;
+            margin-bottom: 12px;
+            width: 100%;
+            border: 1px solid transparent;
+        }
+        .search-box:focus {
+            border-color: #2d7aff;
+            background: white;
+            outline: none;
+        }
+        .process-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .process-table th {
+            text-align: left;
+            color: #5e6f8d;
+            font-weight: 500;
+            padding: 8px 4px;
+            font-size: 13px;
+        }
+        .process-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #edeff2;
+        }
+        .process-row input, .process-row select {
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid #e0e4ec;
+            width: 100%;
+        }
+        .del-btn {
+            color: #ff4d4f;
+            font-size: 22px;
+            cursor: pointer;
+            text-align: center;
+            width: 32px;
+            display: inline-block;
+            user-select: none;
+            font-weight: 500;
+        }
+        .add-btn {
+            background: #f0f4ff;
+            color: #2d7aff;
+            border: 1px dashed #2d7aff;
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: auto;
+            margin-top: 12px;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .close-btn {
+            font-size: 32px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+        }
+        .modal-footer {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            padding-bottom: 30px;
+        }
+        .modal-footer button {
+            flex: 1;
+            background: #2d7aff;
+            color: white;
+            border: none;
+            font-weight: 500;
+            padding: 16px;
+            border-radius: 30px;
+        }
+        .modal-footer button:last-child {
+            background: white;
+            color: #1f2d3d;
+            border: 1.5px solid #e6eaf0;
+        }
+        .result-row {
+            background: #f0f7ff;
+            border-radius: 20px;
+            padding: 16px;
+            margin: 16px 0 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        .total-price {
+            font-size: 28px;
+            color: #1f2d3d;
+        }
+        .tax-tip {
+            font-size: 14px;
+            color: #5e6f8d;
+            font-weight: normal;
+            text-align: right;
+            margin-bottom: 16px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn-primary {
+            background: #2d7aff;
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 16px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: white;
+            border: 1.5px solid #e6eaf0;
+            color: #1f2d3d;
+            font-weight: 600;
+            padding: 16px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .inline-code {
+            background: #f0f2f5;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 16px;
+            border: 1px solid #e0e4ec;
+        }
+        .select-process-btn {
+            background: #f0f4ff;
+            border: 1px solid #2d7aff;
+            color: #2d7aff;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function() {
+    // ---------- 材料数据库 ----------
+    const materialDB = {
+        "碳素结构钢": {
+            "Q235 (A3钢)": 7.85,
+            "45#钢": 7.85,
+            "20#钢": 7.85,
+            "40Cr": 7.85,
+            "65Mn": 7.85
+        },
+        "合金钢": {
+            "Cr12 (模具钢)": 7.85,
+            "Cr12MoV": 7.85,
+            "SKD11": 7.85,
+            "DC53": 7.85,
+            "H13": 7.85
+        },
+        "不锈钢": {
+            "304": 7.93,
+            "316": 7.98,
+            "410": 7.75,
+            "420": 7.75,
+            "430": 7.70
+        },
+        "铝合金": {
+            "6061": 2.70,
+            "6063": 2.69,
+            "7075": 2.81,
+            "5052": 2.68,
+            "LY12 (2A12)": 2.78
+        },
+        "铜合金": {
+            "黄铜 H62": 8.43,
+            "黄铜 H65": 8.47,
+            "紫铜 T2": 8.96,
+            "青铜 QSn6.5-0.1": 8.80,
+            "铍铜 QBe2": 8.23
+        },
+        "钛合金": {
+            "TC4 (Ti-6Al-4V)": 4.43,
+            "TA2 (工业纯钛)": 4.51
+        },
+        "工程塑料": {
+            "尼龙 PA6": 1.14,
+            "尼龙 PA66": 1.15,
+            "POM (赛钢)": 1.41,
+            "ABS": 1.05,
+            "聚四氟乙烯 PTFE": 2.20,
+            "聚碳酸酯 PC": 1.20
+        },
+        "其他": {
+            "铸钢 ZG230-450": 7.80,
+            "灰铸铁 HT250": 7.20,
+            "球墨铸铁 QT450": 7.30
+        }
+    };
+
+    // ---------- 工艺数据库 ----------
+    const processDB = [
+        {
+            name: "加工中心",
+            children: [
+                { name: "三轴 (行程≤300mm)", unit: "元/小时", defaultPrice: 60 },
+                { name: "三轴 (行程1~2m)", unit: "元/小时", defaultPrice: 80 },
+                { name: "三轴 (行程>2m)", unit: "元/小时", defaultPrice: 100 },
+                { name: "四轴", unit: "元/小时", defaultPrice: 120 },
+                { name: "五轴", unit: "元/小时", defaultPrice: 200 },
+                { name: "卧式加工中心", unit: "元/小时", defaultPrice: 150 }
+            ]
+        },
+        {
+            name: "数控车床",
+            children: [
+                { name: "排刀式数控车", unit: "元/小时", defaultPrice: 50 },
+                { name: "刀塔式数控车", unit: "元/小时", defaultPrice: 60 },
+                { name: "车铣复合", unit: "元/小时", defaultPrice: 80 }
+            ]
+        },
+        {
+            name: "普通机床",
+            children: [
+                { name: "手摇车床", unit: "元/小时", defaultPrice: 40 },
+                { name: "普通车床", unit: "元/小时", defaultPrice: 45 },
+                { name: "手摇钻床", unit: "元/小时", defaultPrice: 35 },
+                { name: "摇臂钻", unit: "元/小时", defaultPrice: 40 },
+                { name: "镗床", unit: "元/小时", defaultPrice: 60 },
+                { name: "坐标镗", unit: "元/小时", defaultPrice: 80 },
+                { name: "牛头刨", unit: "元/小时", defaultPrice: 50 }
+            ]
+        },
+        {
+            name: "磨床",
+            children: [
+                { name: "精密平面磨", unit: "元/㎡", defaultPrice: 200 },
+                { name: "大水磨", unit: "元/㎡", defaultPrice: 80 },
+                { name: "外圆磨", unit: "元/小时", defaultPrice: 60 },
+                { name: "内圆磨", unit: "元/小时", defaultPrice: 60 }
+            ]
+        },
+        {
+            name: "特种加工",
+            children: [
+                { name: "线切割", unit: "元/cm²", defaultPrice: 0.005 },
+                { name: "电火花", unit: "元/小时", defaultPrice: 50 },
+                { name: "激光切割", unit: "元/米", defaultPrice: 35 },
+                { name: "水切割", unit: "元/小时", defaultPrice: 80 }
+            ]
+        },
+        {
+            name: "表面处理",
+            children: [
+                { name: "镀铬", unit: "元/dm²", defaultPrice: 19 },
+                { name: "镀锌", unit: "元/dm²", defaultPrice: 3 },
+                { name: "阳极氧化 (本色)", unit: "元/dm²", defaultPrice: 4 },
+                { name: "阳极氧化 (喷砂)", unit: "元/dm²", defaultPrice: 8 },
+                { name: "镀镍", unit: "元/dm²", defaultPrice: 5 },
+                { name: "喷漆", unit: "元/dm²", defaultPrice: 5 },
+                { name: "涂装", unit: "元/dm²", defaultPrice: 3 }
+            ]
+        },
+        {
+            name: "热处理",
+            children: [
+                { name: "淬火", unit: "元/kg", defaultPrice: 5 },
+                { name: "回火", unit: "元/kg", defaultPrice: 3 },
+                { name: "氮化", unit: "元/kg", defaultPrice: 8 },
+                { name: "真空加硬", unit: "元/kg", defaultPrice: 10 }
+            ]
+        },
+        {
+            name: "钣金/冲压",
+            children: [
+                { name: "冲压", unit: "元/件", defaultPrice: 2 },
+                { name: "折弯", unit: "元/件", defaultPrice: 3 },
+                { name: "剪板", unit: "元/件", defaultPrice: 2 },
+                { name: "焊接", unit: "元/米", defaultPrice: 20 }
+            ]
+        },
+        {
+            name: "钻孔/攻牙",
+            children: [
+                { name: "钻孔", unit: "元/个", defaultPrice: 0.5 },
+                { name: "攻牙", unit: "元/个", defaultPrice: 0.5 }
+            ]
+        }
+    ];
+
+    // ---------- 工具函数 ----------
+    function generateOrderId() {
+        const now = new Date();
+        const year = now.getFullYear().toString();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let r1, r2;
+        do {
+            r1 = chars[Math.floor(Math.random() * chars.length)];
+            r2 = chars[Math.floor(Math.random() * chars.length)];
+        } while (r1 === r2 && Math.random() > 0.5);
+        return year + month + day + r1 + r2;
+    }
+
+    // ---------- 全局状态 ----------
+    let appState = {
+        orderId: generateOrderId(),
+        clientName: '',
+        shape: '方形',
+        dimensions: { l: '', w: '', h: '', d: '' },
+        selectedMaterial: null,
+        materialPrice: '',
+        quantity: 1,
+        processes: [],
+        delivery: '自提',
+        shippingFee: '',
+        taxIncluded: false,
+        extraItems: [],
+        ourCompany: '',
+        date: new Date().toISOString().slice(0,10),
+        currentProcessIndex: null
+    };
+
+    // ---------- 计算函数 ----------
+    function calculateWeight() {
+        if (!appState.selectedMaterial) return 0;
+        const density = appState.selectedMaterial.density;
+        let volume = 0;
+        if (appState.shape === '方形') {
+            const l = parseFloat(appState.dimensions.l) || 0;
+            const w = parseFloat(appState.dimensions.w) || 0;
+            const h = parseFloat(appState.dimensions.h) || 0;
+            volume = l * w * h;
+        } else {
+            const d = parseFloat(appState.dimensions.d) || 0;
+            const h = parseFloat(appState.dimensions.h) || 0;
+            volume = Math.PI * (d/2) * (d/2) * h;
+        }
+        return (volume / 1000) * density / 1000;
+    }
+
+    function calculateUnitMaterialCost() {
+        const weight = calculateWeight();
+        const price = parseFloat(appState.materialPrice) || 0;
+        return weight * price;
+    }
+
+    function calculateTotalMaterialCost() {
+        const unit = calculateUnitMaterialCost();
+        const qty = parseInt(appState.quantity) || 1;
+        return unit * qty;
+    }
+
+    function calculateProcessLineTotal(process, hours, unit, price) {
+        const h = parseFloat(hours) || 0;
+        let hoursInHour = h;
+        if (unit === '秒') hoursInHour = h / 3600;
+        else if (unit === '分') hoursInHour = h / 60;
+        const p = parseFloat(price) || 0;
+        return hoursInHour * p;
+    }
+
+    function calculateTotalProcessCost() {
+        let total = 0;
+        appState.processes.forEach(p => {
+            total += calculateProcessLineTotal(p, p.hours, p.unit, p.price);
+        });
+        return total * (parseInt(appState.quantity) || 1);
+    }
+
+    function calculateExtraTotal() {
+        return appState.extraItems.reduce((sum, item) => sum + (parseFloat(item.fee) || 0), 0);
+    }
+
+    function calculateFinalTotal() {
+        let base = calculateTotalMaterialCost() + calculateTotalProcessCost() + calculateExtraTotal();
+        if (appState.delivery === '运送') {
+            base += parseFloat(appState.shippingFee) || 0;
+        }
+        if (appState.taxIncluded) {
+            base = base * 1.13;
+        }
+        return base;
+    }
+
+    // ---------- 渲染函数 ----------
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = getHTML();
+        bindEvents();
+        updateAllCalculations();
+    }
+
+    function getHTML() {
+        return `
+            <div class="card">
+                <div class="card-title">📋 甲方信息 & 材料</div>
+                <div class="flex-row">
+                    <div class="field-group">
+                        <div class="field-label">甲方名称</div>
+                        <input type="text" id="clientName" value="${escapeHtml(appState.clientName)}" placeholder="例：恒通机械">
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">编号</div>
+                        <div class="inline-code" id="orderIdDisplay">${appState.orderId}</div>
+                    </div>
+                </div>
+
+                <div class="flex-row">
+                    <div class="field-group">
+                        <div class="field-label">零件形状</div>
+                        <select id="shapeSelect">
+                            <option value="方形" ${appState.shape === '方形' ? 'selected' : ''}>方形</option>
+                            <option value="圆柱形" ${appState.shape === '圆柱形' ? 'selected' : ''}>圆柱形</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">数量</div>
+                        <input type="number" id="quantity" value="${appState.quantity}" min="1" step="1">
+                    </div>
+                </div>
+
+                <div id="dimensionInputs">
+                    ${appState.shape === '方形' ? `
+                        <div class="flex-row">
+                            <div class="field-group"><input type="number" id="dimL" placeholder="长(mm)" value="${appState.dimensions.l || ''}"></div>
+                            <div class="field-group"><input type="number" id="dimW" placeholder="宽(mm)" value="${appState.dimensions.w || ''}"></div>
+                            <div class="field-group"><input type="number" id="dimH" placeholder="高(mm)" value="${appState.dimensions.h || ''}"></div>
+                        </div>
+                    ` : `
+                        <div class="flex-row">
+                            <div class="field-group"><input type="number" id="dimD" placeholder="直径(mm)" value="${appState.dimensions.d || ''}"></div>
+                            <div class="field-group"><input type="number" id="dimH" placeholder="高(mm)" value="${appState.dimensions.h || ''}"></div>
+                        </div>
+                    `}
+                </div>
+
+                <div class="field-label" style="margin-top:12px;">材料类型</div>
+                <input type="text" class="search-box" id="materialSearch" placeholder="🔍 搜索材料...">
+                <div class="tree-view" id="materialTree">
+                    ${renderMaterialTree()}
+                </div>
+
+                <div class="flex-row" style="margin-top:12px;">
+                    <div class="field-group">
+                        <div class="field-label">材料单价 (元/kg)</div>
+                        <input type="number" id="materialPrice" step="0.01" value="${appState.materialPrice}">
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">单重(kg)</div>
+                        <input type="text" id="weightOutput" readonly value="${calculateWeight().toFixed(3)}">
+                    </div>
+                </div>
+
+                <div class="flex-row">
+                    <div class="field-group">
+                        <div class="field-label">单个材料成本(元)</div>
+                        <input type="text" id="unitMaterialCost" readonly value="${calculateUnitMaterialCost().toFixed(2)}">
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">总材料成本(元)</div>
+                        <input type="text" id="totalMaterialCost" readonly value="${calculateTotalMaterialCost().toFixed(2)}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚙️ 加工工序</div>
+                <table class="process-table">
+                    <thead>
+                        <tr><th>序号</th><th>工艺</th><th>工时</th><th>单位</th><th>单价</th><th>价格</th><th></th></tr>
+                    </thead>
+                    <tbody id="processTableBody">
+                        ${renderProcessRows()}
+                    </tbody>
+                </table>
+                <button class="add-btn" id="addProcessBtn">➕ 增加工序</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🚚 其他需求</div>
+                <div class="flex-row">
+                    <div class="field-group">
+                        <div class="field-label">取货方式</div>
+                        <select id="deliverySelect">
+                            <option value="自提" ${appState.delivery === '自提' ? 'selected' : ''}>自提</option>
+                            <option value="运送" ${appState.delivery === '运送' ? 'selected' : ''}>运送</option>
+                        </select>
+                    </div>
+                    <div class="field-group ${appState.delivery !== '运送' ? 'hidden' : ''}" id="shippingField">
+                        <div class="field-label">运费(元)</div>
+                        <input type="number" id="shippingFee" step="0.01" value="${appState.shippingFee}">
+                    </div>
+                </div>
+                <div class="flex-row">
+                    <div class="field-group">
+                        <div class="field-label">是否含税(13%)</div>
+                        <select id="taxSelect">
+                            <option value="否" ${!appState.taxIncluded ? 'selected' : ''}>否</option>
+                            <option value="是" ${appState.taxIncluded ? 'selected' : ''}>是</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">💰 其他费用</div>
+                <div id="extraItemsList">
+                    ${renderExtraItems()}
+                </div>
+                <button class="add-btn" id="addExtraBtn">➕ 增加其他费用</button>
+
+                <div class="result-row">
+                    <span>总价 (所有零件)</span>
+                    <span class="total-price" id="finalTotal">¥ ${calculateFinalTotal().toFixed(2)}</span>
+                </div>
+                <div class="tax-tip" id="taxHint">${appState.taxIncluded ? '已含13%增值税' : '未含税'}</div>
+
+                <div class="flex-row" style="margin-top:20px;">
+                    <div class="field-group">
+                        <div class="field-label">乙方名称</div>
+                        <input type="text" id="ourCompany" value="${escapeHtml(appState.ourCompany)}">
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">日期</div>
+                        <input type="date" id="quoteDate" value="${appState.date}">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-primary" id="saveBtn">💾 一键保存</button>
+                    <button class="btn-secondary" id="printBtn">🖨️ 一键打印</button>
+                </div>
+            </div>
+
+            <div id="processModal" class="modal">
+                <div class="modal-header">
+                    <span>选择工艺</span>
+                    <span class="close-btn" id="closeModalBtn">&times;</span>
+                </div>
+                <input type="text" class="search-box" id="processSearch" placeholder="🔍 搜索工艺...">
+                <div style="flex:1; overflow-y: auto;" id="processTree">
+                    ${renderProcessTree()}
+                </div>
+                <div class="modal-footer">
+                    <button id="modalConfirmBtn">确认选择</button>
+                    <button id="modalCancelBtn">取消</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            if (m === '"') return '&quot;';
+            return m;
+        });
+    }
+
+    function renderMaterialTree() {
+        let html = '';
+        const searchTerm = document.getElementById('materialSearch')?.value?.toLowerCase() || '';
+        for (let [category, materials] of Object.entries(materialDB)) {
+            let categoryVisible = false;
+            let childrenHtml = '';
+            for (let [name, density] of Object.entries(materials)) {
+                const visible = !searchTerm || name.toLowerCase().includes(searchTerm) || category.toLowerCase().includes(searchTerm);
+                if (visible) categoryVisible = true;
+                const checked = appState.selectedMaterial && 
+                               appState.selectedMaterial.category === category && 
+                               appState.selectedMaterial.name === name ? 'checked' : '';
+                childrenHtml += `
+                    <div class="material-radio" style="display: ${visible ? 'flex' : 'none'}">
+                        <input type="radio" name="material" value="${category}|${name}|${density}" ${checked}>
+                        <span>${name} (${density}g/cm³)</span>
+                    </div>
+                `;
+            }
+            if (!searchTerm || categoryVisible) {
+                html += `
+                    <div class="tree-root" data-category="${category}">
+                        📁 ${category} <span>▶</span>
+                    </div>
+                    <div class="tree-children" id="children-${category}">
+                        ${childrenHtml}
+                    </div>
+                `;
+            }
+        }
+        return html;
+    }
+
+    function renderProcessRows() {
+        if (appState.processes.length === 0) {
+            return '<tr><td colspan="7" style="text-align:center; padding:20px;">暂无工序，点击下方添加</td></tr>';
+        }
+        return appState.processes.map((p, idx) => {
+            const procName = p.procObj ? p.procObj.name : '未选择';
+            return `
+                <tr class="process-row" data-index="${idx}">
+                    <td>${idx + 1}</td>
+                    <td>
+                        <button class="select-process-btn" data-index="${idx}">${procName}</button>
+                    </td>
+                    <td><input type="number" class="process-hours" data-index="${idx}" value="${p.hours || ''}" step="0.1" style="width:70px;"></td>
+                    <td>
+                        <select class="process-unit" data-index="${idx}">
+                            <option value="秒" ${p.unit === '秒' ? 'selected' : ''}>秒</option>
+                            <option value="分" ${p.unit === '分' ? 'selected' : ''}>分</option>
+                            <option value="时" ${p.unit === '时' ? 'selected' : ''}>时</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="process-price" data-index="${idx}" value="${p.price || ''}" step="0.01" style="width:70px;"></td>
+                    <td><span class="process-total" data-index="${idx}">${calculateProcessLineTotal(p, p.hours, p.unit, p.price).toFixed(2)}</span></td>
+                    <td><span class="del-btn" data-index="${idx}">✖</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderProcessTree() {
+        let html = '';
+        processDB.forEach(cat => {
+            html += `
+                <div class="tree-root" data-category="${cat.name}">
+                    📁 ${cat.name} <span>▶</span>
+                </div>
+                <div class="tree-children" id="children-${cat.name}">
+            `;
+            cat.children.forEach(proc => {
+                html += `
+                    <div class="process-radio">
+                        <input type="radio" name="process" value='${JSON.stringify(proc).replace(/'/g, "&apos;")}'>
+                        <span>${proc.name} (${proc.unit} ¥${proc.defaultPrice})</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        });
+        return html;
+    }
+
+    function renderExtraItems() {
+        if (appState.extraItems.length === 0) {
+            return '<div style="padding:10px; color:#aaa;">暂无其他费用，点击下方添加</div>';
+        }
+        return appState.extraItems.map((item, idx) => `
+            <div class="flex-row" data-extra-idx="${idx}" style="margin-bottom:8px;">
+                <div class="field-group">
+                    <input type="text" class="extra-name" placeholder="项目名称" value="${escapeHtml(item.name || '')}">
+                </div>
+                <div class="field-group">
+                    <input type="number" class="extra-fee" placeholder="费用" value="${item.fee || ''}" step="0.01">
+                </div>
+                <span class="del-btn" data-extra-idx="${idx}">✖</span>
+            </div>
+        `).join('');
+    }
+
+    // ---------- 事件绑定 ----------
+    function bindEvents() {
+        // 形状切换
+        document.getElementById('shapeSelect')?.addEventListener('change', function(e) {
+            appState.shape = e.target.value;
+            appState.dimensions = { l: '', w: '', h: '', d: '' };
+            render();
+        });
+
+        // 尺寸输入
+        ['dimL','dimW','dimH','dimD'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', function(e) {
+                const dim = id.replace('dim', '').toLowerCase();
+                appState.dimensions[dim] = e.target.value;
+                updateAllCalculations();
+            });
+        });
+
+        // 材料搜索
+        document.getElementById('materialSearch')?.addEventListener('input', function(e) {
+            const container = document.getElementById('materialTree');
+            if (container) {
+                container.innerHTML = renderMaterialTree();
+                bindMaterialTreeEvents();
+            }
+        });
+
+        // 材料树展开/收起
+        function bindMaterialTreeEvents() {
+            document.querySelectorAll('#materialTree .tree-root').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const category = this.dataset.category;
+                    const children = document.getElementById(`children-${category}`);
+                    const span = this.querySelector('span');
+                    if (children) {
+                        children.classList.toggle('expanded');
+                        span.style.transform = children.classList.contains('expanded') ? 'rotate(90deg)' : '';
+                    }
+                });
+            });
+
+            document.querySelectorAll('#materialTree input[name="material"]').forEach(radio => {
+                radio.addEventListener('change', function(e) {
+                    const [category, name, density] = this.value.split('|');
+                    appState.selectedMaterial = { category, name, density: parseFloat(density) };
+                    updateAllCalculations();
+                });
+            });
+        }
+        bindMaterialTreeEvents();
+
+        // 材料单价
+        document.getElementById('materialPrice')?.addEventListener('input', function(e) {
+            appState.materialPrice = e.target.value;
+            updateAllCalculations();
+        });
+
+        // 数量
+        document.getElementById('quantity')?.addEventListener('input', function(e) {
+            appState.quantity = parseInt(e.target.value) || 1;
+            updateAllCalculations();
+        });
+
+        // 甲方名称
+        document.getElementById('clientName')?.addEventListener('input', function(e) {
+            appState.clientName = e.target.value;
+        });
+
+        // 添加工序
+        document.getElementById('addProcessBtn')?.addEventListener('click', function() {
+            appState.processes.push({
+                procObj: null,
+                hours: '',
+                unit: '时',
+                price: ''
+            });
+            render();
+        });
+
+        // 工序选择按钮
+        document.querySelectorAll('.select-process-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const index = this.dataset.index;
+                appState.currentProcessIndex = parseInt(index);
+                document.getElementById('processModal').style.display = 'flex';
+                bindProcessSearch();
+            });
+        });
+
+        // 工序输入变化
+        document.querySelectorAll('.process-hours').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const idx = this.dataset.index;
+                appState.processes[idx].hours = e.target.value;
+                updateProcessRowTotal(idx);
+            });
+        });
+
+        document.querySelectorAll('.process-unit').forEach(select => {
+            select.addEventListener('change', function(e) {
+                const idx = this.dataset.index;
+                appState.processes[idx].unit = e.target.value;
+                updateProcessRowTotal(idx);
+            });
+        });
+
+        document.querySelectorAll('.process-price').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const idx = this.dataset.index;
+                appState.processes[idx].price = e.target.value;
+                updateProcessRowTotal(idx);
+            });
+        });
+
+        // 删除工序
+        document.querySelectorAll('.process-row .del-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const idx = this.dataset.index;
+                appState.processes.splice(idx, 1);
+                render();
+            });
+        });
+
+        // 取货方式
+        document.getElementById('deliverySelect')?.addEventListener('change', function(e) {
+            appState.delivery = e.target.value;
+            document.getElementById('shippingField').classList.toggle('hidden', e.target.value !== '运送');
+            updateAllCalculations();
+        });
+
+        // 运费
+        document.getElementById('shippingFee')?.addEventListener('input', function(e) {
+            appState.shippingFee = e.target.value;
+            updateAllCalculations();
+        });
+
+        // 税费
+        document.getElementById('taxSelect')?.addEventListener('change', function(e) {
+            appState.taxIncluded = e.target.value === '是';
+            updateAllCalculations();
+        });
+
+        // 其他费用
+        document.getElementById('addExtraBtn')?.addEventListener('click', function() {
+            appState.extraItems.push({ name: '', fee: '' });
+            render();
+        });
+
+        document.querySelectorAll('.extra-name').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const idx = this.closest('[data-extra-idx]')?.dataset.extraIdx;
+                if (idx !== undefined) {
+                    appState.extraItems[idx].name = e.target.value;
+                }
+            });
+        });
+
+        document.querySelectorAll('.extra-fee').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const idx = this.closest('[data-extra-idx]')?.dataset.extraIdx;
+                if (idx !== undefined) {
+                    appState.extraItems[idx].fee = e.target.value;
+                }
+                updateAllCalculations();
+            });
+        });
+
+        document.querySelectorAll('#extraItemsList .del-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const idx = this.dataset.extraIdx;
+                if (idx !== undefined) {
+                    appState.extraItems.splice(idx, 1);
+                    render();
+                }
+            });
+        });
+
+        // 乙方名称
+        document.getElementById('ourCompany')?.addEventListener('input', function(e) {
+            appState.ourCompany = e.target.value;
+        });
+
+        // 日期
+        document.getElementById('quoteDate')?.addEventListener('change', function(e) {
+            appState.date = e.target.value;
+        });
+
+        // 模态框关闭
+        document.getElementById('closeModalBtn')?.addEventListener('click', function() {
+            document.getElementById('processModal').style.display = 'none';
+        });
+
+        document.getElementById('modalCancelBtn')?.addEventListener('click', function() {
+            document.getElementById('processModal').style.display = 'none';
+        });
+
+        // 确认选择工艺
+        document.getElementById('modalConfirmBtn')?.addEventListener('click', function() {
+            const selected = document.querySelector('#processModal input[name="process"]:checked');
+            if (selected && appState.currentProcessIndex !== null) {
+                const procObj = JSON.parse(selected.value);
+                appState.processes[appState.currentProcessIndex].procObj = procObj;
+                appState.processes[appState.currentProcessIndex].price = procObj.defaultPrice;
+                render();
+            }
+            document.getElementById('processModal').style.display = 'none';
+        });
+
+        // 工艺搜索
+        function bindProcessSearch() {
+            document.getElementById('processSearch')?.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('#processModal .process-radio').forEach(el => {
+                    const text = el.querySelector('span').textContent.toLowerCase();
+                    el.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                });
+            });
+
+            document.querySelectorAll('#processModal .tree-root').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const category = this.dataset.category;
+                    const children = document.getElementById(`children-${category}`);
+                    const span = this.querySelector('span');
+                    if (children) {
+                        children.classList.toggle('expanded');
+                        span.style.transform = children.classList.contains('expanded') ? 'rotate(90deg)' : '';
+                    }
+                });
+            });
+        }
+
+        // 保存
+        document.getElementById('saveBtn')?.addEventListener('click', function() {
+            const dataStr = JSON.stringify(appState, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `报价单_${appState.orderId}.json`;
+            a.click();
+            alert('报价单已保存');
+        });
+
+        // 打印
+        document.getElementById('printBtn')?.addEventListener('click', function() {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('请允许弹出窗口');
+                return;
+            }
+            
+            const materialInfo = appState.selectedMaterial ? 
+                `${appState.selectedMaterial.name} (${appState.selectedMaterial.density}g/cm³)` : '未选择';
+            
+            const processLines = appState.processes.map(p => {
+                const procName = p.procObj ? p.procObj.name : '未选择';
+                return `${procName} - ${p.hours || 0}${p.unit} × ¥${p.price || 0} = ¥${calculateProcessLineTotal(p, p.hours, p.unit, p.price).toFixed(2)}`;
+            }).join('<br>');
+
+            const extraLines = appState.extraItems.map(item => 
+                `${item.name || '其他'}: ¥${parseFloat(item.fee || 0).toFixed(2)}`
+            ).join('<br>');
+
+            const html = `
+                <html>
+                <head>
+                    <title>报价单 ${appState.orderId}</title>
+                    <style>
+                        body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
+                        h1 { color: #333; }
+                        .section { margin: 30px 0; }
+                        .total { font-size: 24px; font-weight: bold; color: #2d7aff; margin-top: 30px; }
+                        .line { border-bottom: 1px solid #ccc; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h1>报价单</h1>
+                    <p><strong>编号：</strong>${appState.orderId}</p>
+                    <p><strong>甲方：</strong>${appState.clientName || '未填写'}</p>
+                    <p><strong>日期：</strong>${appState.date}</p>
+                    
+                    <div class="line"></div>
+                    <h3>材料信息</h3>
+                    <p>形状：${appState.shape}</p>
+                    <p>尺寸：${JSON.stringify(appState.dimensions)}</p>
+                    <p>材料：${materialInfo}</p>
+                    <p>单价：¥${parseFloat(appState.materialPrice || 0).toFixed(2)}/kg</p>
+                    <p>单重：${calculateWeight().toFixed(3)}kg</p>
+                    <p>数量：${appState.quantity}</p>
+                    <p><strong>材料总成本：¥${calculateTotalMaterialCost().toFixed(2)}</strong></p>
+
+                    <div class="line"></div>
+                    <h3>加工工序</h3>
+                    ${processLines || '无'}
+
+                    <div class="line"></div>
+                    <h3>其他费用</h3>
+                    ${extraLines || '无'}
+
+                    <div class="total">
+                        总价：¥${calculateFinalTotal().toFixed(2)}
+                        ${appState.taxIncluded ? '(含13%税)' : '(未含税)'}
+                    </div>
+                    
+                    <p style="margin-top: 50px;"><strong>乙方：</strong>${appState.ourCompany || '未填写'}</p>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        });
+    }
+
+    function updateAllCalculations() {
+        const weightEl = document.getElementById('weightOutput');
+        if (weightEl) weightEl.value = calculateWeight().toFixed(3);
+        
+        const unitCostEl = document.getElementById('unitMaterialCost');
+        if (unitCostEl) unitCostEl.value = calculateUnitMaterialCost().toFixed(2);
+        
+        const totalCostEl = document.getElementById('totalMaterialCost');
+        if (totalCostEl) totalCostEl.value = calculateTotalMaterialCost().toFixed(2);
+
+        // 更新每行工序价格
+        appState.processes.forEach((_, idx) => updateProcessRowTotal(idx));
+
+        // 更新总价
+        const finalEl = document.getElementById('finalTotal');
+        if (finalEl) finalEl.textContent = `¥ ${calculateFinalTotal().toFixed(2)}`;
+        
+        const taxHint = document.getElementById('taxHint');
+        if (taxHint) taxHint.textContent = appState.taxIncluded ? '已含13%增值税' : '未含税';
+    }
+
+    function updateProcessRowTotal(idx) {
+        const p = appState.processes[idx];
+        if (!p) return;
+        const total = calculateProcessLineTotal(p, p.hours, p.unit, p.price);
+        const span = document.querySelector(`.process-total[data-index="${idx}"]`);
+        if (span) span.textContent = total.toFixed(2);
+        
+        // 更新总价
+        const finalEl = document.getElementById('finalTotal');
+        if (finalEl) finalEl.textContent = `¥ ${calculateFinalTotal().toFixed(2)}`;
+    }
+
+    // 初始化
+    render();
+})();
+</script>
+</body>
+</html>
